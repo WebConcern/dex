@@ -281,4 +281,26 @@ var migrations = []migration{
 				add column obsolete_token text default '';`,
 		},
 	},
+	{
+		stmts: []string{
+			`
+			alter table auth_code
+				add column claims_firstname text not null default '';`,
+			`
+			alter table auth_request
+				add column claims_firstname text not null default '';`,
+			`
+			alter table refresh_token
+				add column claims_firstname text not null default '';`,
+			`
+			alter table auth_code
+				add column claims_lastname text not null default '';`,
+			`
+			alter table auth_request
+				add column claims_lastname text not null default '';`,
+			`
+			alter table refresh_token
+				add column claims_lastname text not null default '';`,
+		},
+	},
 }

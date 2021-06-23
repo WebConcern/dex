@@ -128,18 +128,20 @@ func (c *conn) CreateAuthRequest(a storage.AuthRequest) error {
 			id, client_id, response_types, scopes, redirect_uri, nonce, state,
 			force_approval_prompt, logged_in,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified, claims_groups,
 			connector_id, connector_data,
 			expiry,
 			code_challenge, code_challenge_method
 		)
 		values (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
 		);
 	`,
 		a.ID, a.ClientID, encoder(a.ResponseTypes), encoder(a.Scopes), a.RedirectURI, a.Nonce, a.State,
 		a.ForceApprovalPrompt, a.LoggedIn,
 		a.Claims.UserID, a.Claims.Username, a.Claims.PreferredUsername,
+		a.Claims.Firstname, a.Claims.Lastname,
 		a.Claims.Email, a.Claims.EmailVerified, encoder(a.Claims.Groups),
 		a.ConnectorID, a.ConnectorData,
 		a.Expiry,
@@ -171,16 +173,18 @@ func (c *conn) UpdateAuthRequest(id string, updater func(a storage.AuthRequest) 
 				client_id = $1, response_types = $2, scopes = $3, redirect_uri = $4,
 				nonce = $5, state = $6, force_approval_prompt = $7, logged_in = $8,
 				claims_user_id = $9, claims_username = $10, claims_preferred_username = $11,
-				claims_email = $12, claims_email_verified = $13,
-				claims_groups = $14,
-				connector_id = $15, connector_data = $16,
-				expiry = $17,
-				code_challenge = $18, code_challenge_method = $19
-			where id = $20;
+				claims_firstname = $12, claims_lastname = $13,
+				claims_email = $14, claims_email_verified = $15,
+				claims_groups = $16,
+				connector_id = $17, connector_data = $18,
+				expiry = $19,
+				code_challenge = $20, code_challenge_method = $21
+			where id = $22;
 		`,
 			a.ClientID, encoder(a.ResponseTypes), encoder(a.Scopes), a.RedirectURI, a.Nonce, a.State,
 			a.ForceApprovalPrompt, a.LoggedIn,
 			a.Claims.UserID, a.Claims.Username, a.Claims.PreferredUsername,
+			a.Claims.Firstname, a.Claims.Lastname,
 			a.Claims.Email, a.Claims.EmailVerified,
 			encoder(a.Claims.Groups),
 			a.ConnectorID, a.ConnectorData,
@@ -205,6 +209,7 @@ func getAuthRequest(q querier, id string) (a storage.AuthRequest, err error) {
 			id, client_id, response_types, scopes, redirect_uri, nonce, state,
 			force_approval_prompt, logged_in,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified, claims_groups,
 			connector_id, connector_data, expiry,
 			code_challenge, code_challenge_method
@@ -213,6 +218,7 @@ func getAuthRequest(q querier, id string) (a storage.AuthRequest, err error) {
 		&a.ID, &a.ClientID, decoder(&a.ResponseTypes), decoder(&a.Scopes), &a.RedirectURI, &a.Nonce, &a.State,
 		&a.ForceApprovalPrompt, &a.LoggedIn,
 		&a.Claims.UserID, &a.Claims.Username, &a.Claims.PreferredUsername,
+		&a.Claims.Firstname, &a.Claims.Lastname,
 		&a.Claims.Email, &a.Claims.EmailVerified,
 		decoder(&a.Claims.Groups),
 		&a.ConnectorID, &a.ConnectorData, &a.Expiry,
@@ -232,15 +238,18 @@ func (c *conn) CreateAuthCode(a storage.AuthCode) error {
 		insert into auth_code (
 			id, client_id, scopes, nonce, redirect_uri,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified, claims_groups,
 			connector_id, connector_data,
 			expiry,
 			code_challenge, code_challenge_method
 		)
-		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
+		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);
 	`,
 		a.ID, a.ClientID, encoder(a.Scopes), a.Nonce, a.RedirectURI, a.Claims.UserID,
-		a.Claims.Username, a.Claims.PreferredUsername, a.Claims.Email, a.Claims.EmailVerified,
+		a.Claims.Username, a.Claims.PreferredUsername,
+		a.Claims.Firstname, a.Claims.Lastname,
+		a.Claims.Email, a.Claims.EmailVerified,
 		encoder(a.Claims.Groups), a.ConnectorID, a.ConnectorData, a.Expiry,
 		a.PKCE.CodeChallenge, a.PKCE.CodeChallengeMethod,
 	)
@@ -258,6 +267,7 @@ func (c *conn) GetAuthCode(id string) (a storage.AuthCode, err error) {
 		select
 			id, client_id, scopes, nonce, redirect_uri,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified, claims_groups,
 			connector_id, connector_data,
 			expiry,
@@ -265,7 +275,9 @@ func (c *conn) GetAuthCode(id string) (a storage.AuthCode, err error) {
 		from auth_code where id = $1;
 	`, id).Scan(
 		&a.ID, &a.ClientID, decoder(&a.Scopes), &a.Nonce, &a.RedirectURI, &a.Claims.UserID,
-		&a.Claims.Username, &a.Claims.PreferredUsername, &a.Claims.Email, &a.Claims.EmailVerified,
+		&a.Claims.Username, &a.Claims.PreferredUsername,
+		&a.Claims.Firstname, &a.Claims.Lastname,
+		&a.Claims.Email, &a.Claims.EmailVerified,
 		decoder(&a.Claims.Groups), &a.ConnectorID, &a.ConnectorData, &a.Expiry,
 		&a.PKCE.CodeChallenge, &a.PKCE.CodeChallengeMethod,
 	)
@@ -283,6 +295,7 @@ func (c *conn) CreateRefresh(r storage.RefreshToken) error {
 		insert into refresh_token (
 			id, client_id, scopes, nonce,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified, claims_groups,
 			connector_id, connector_data,
 			token, obsolete_token, created_at, last_used
@@ -291,6 +304,7 @@ func (c *conn) CreateRefresh(r storage.RefreshToken) error {
 	`,
 		r.ID, r.ClientID, encoder(r.Scopes), r.Nonce,
 		r.Claims.UserID, r.Claims.Username, r.Claims.PreferredUsername,
+		r.Claims.Firstname, r.Claims.Lastname,
 		r.Claims.Email, r.Claims.EmailVerified,
 		encoder(r.Claims.Groups),
 		r.ConnectorID, r.ConnectorData,
@@ -323,20 +337,23 @@ func (c *conn) UpdateRefreshToken(id string, updater func(old storage.RefreshTok
 				claims_user_id = $4,
 				claims_username = $5,
 				claims_preferred_username = $6,
-				claims_email = $7,
-				claims_email_verified = $8,
-				claims_groups = $9,
-				connector_id = $10,
-				connector_data = $11,
-				token = $12,
-                obsolete_token = $13,
-				created_at = $14,
-				last_used = $15
+				claims_firstname = $7,
+				claims_lastname = $8,
+				claims_email = $9,
+				claims_email_verified = $10,
+				claims_groups = $11,
+				connector_id = $12,
+				connector_data = $13,
+				token = $14,
+                obsolete_token = $15,
+				created_at = $16,
+				last_used = $17
 			where
-				id = $16
+				id = $18
 		`,
 			r.ClientID, encoder(r.Scopes), r.Nonce,
 			r.Claims.UserID, r.Claims.Username, r.Claims.PreferredUsername,
+			r.Claims.Firstname, r.Claims.Lastname,
 			r.Claims.Email, r.Claims.EmailVerified,
 			encoder(r.Claims.Groups),
 			r.ConnectorID, r.ConnectorData,
@@ -358,6 +375,7 @@ func getRefresh(q querier, id string) (storage.RefreshToken, error) {
 		select
 			id, client_id, scopes, nonce,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified,
 			claims_groups,
 			connector_id, connector_data,
@@ -371,6 +389,7 @@ func (c *conn) ListRefreshTokens() ([]storage.RefreshToken, error) {
 		select
 			id, client_id, scopes, nonce,
 			claims_user_id, claims_username, claims_preferred_username,
+			claims_firstname, claims_lastname,
 			claims_email, claims_email_verified, claims_groups,
 			connector_id, connector_data,
 			token, obsolete_token, created_at, last_used

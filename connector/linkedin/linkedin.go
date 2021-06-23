@@ -95,6 +95,8 @@ func (c *linkedInConnector) HandleCallback(s connector.Scopes, r *http.Request) 
 		Username:      profile.fullname(),
 		Email:         profile.Email,
 		EmailVerified: true,
+		Firstname:     profile.FirstName,
+		Lastname:      profile.LastName,
 	}
 
 	if s.OfflineAccess {
